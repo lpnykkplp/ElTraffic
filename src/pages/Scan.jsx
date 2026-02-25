@@ -333,7 +333,6 @@ export default function Scan() {
                     <button
                         onClick={() => { setResult(null); setError(null); }}
                         className="btn btn-primary btn-full"
-                        style={{ marginBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))' }}
                     >
                         <ScanBarcode size={18} />
                         Scan Lagi

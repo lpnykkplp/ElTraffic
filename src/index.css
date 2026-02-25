@@ -233,6 +233,10 @@ body {
 
 /* Responsive */
 @media (max-width: 1023px) {
+  .app-layout {
+    flex-direction: column;
+  }
+
   .sidebar {
     display: none;
   }
@@ -250,17 +254,18 @@ body {
     justify-content: center;
   }
 
+  .main-content {
+    flex: 1;
+    min-height: 0;
+  }
+
   .page-content {
     padding: 16px;
-    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
   }
 
   .bottom-nav {
     display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    flex-shrink: 0;
     height: calc(64px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: white;
