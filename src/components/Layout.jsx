@@ -1,11 +1,9 @@
-import { useState } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     UserPlus,
     ScanBarcode,
     ClipboardList,
-    Menu,
     Smartphone,
     Users,
 } from 'lucide-react';
@@ -19,7 +17,6 @@ const navItems = [
 ];
 
 export default function Layout() {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const location = useLocation();
 
     const getPageTitle = () => {
@@ -31,14 +28,8 @@ export default function Layout() {
 
     return (
         <div className="app-layout">
-            {/* Mobile overlay */}
-            <div
-                className={`sidebar-overlay ${sidebarOpen ? 'show' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-            />
-
-            {/* Sidebar */}
-            <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+            {/* Sidebar (desktop only) */}
+            <aside className="sidebar">
                 <div className="sidebar-logo">
                     <div className="sidebar-logo-icon">
                         <Smartphone size={20} color="white" />
@@ -54,7 +45,6 @@ export default function Layout() {
                         <NavLink
                             key={path}
                             to={path}
-                            onClick={() => setSidebarOpen(false)}
                             className={({ isActive }) =>
                                 `nav-link ${isActive ? 'active' : ''}`
                             }
@@ -74,12 +64,6 @@ export default function Layout() {
             {/* Main area */}
             <div className="main-content">
                 <header className="top-bar">
-                    <button
-                        onClick={() => setSidebarOpen(true)}
-                        className="menu-btn"
-                    >
-                        <Menu size={20} />
-                    </button>
                     <h2>{getPageTitle()}</h2>
                 </header>
 
@@ -89,6 +73,22 @@ export default function Layout() {
                     </div>
                 </main>
             </div>
+
+            {/* Bottom Navigation (mobile) */}
+            <nav className="bottom-nav">
+                {navItems.map(({ path, label, icon: Icon }) => (
+                    <NavLink
+                        key={path}
+                        to={path}
+                        className={({ isActive }) =>
+                            `bottom-nav-item ${isActive ? 'active' : ''}`
+                        }
+                    >
+                        <Icon size={20} />
+                        <span>{label}</span>
+                    </NavLink>
+                ))}
+            </nav>
         </div>
     );
 }
