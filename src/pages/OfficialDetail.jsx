@@ -16,6 +16,7 @@ import {
     Save,
     X,
     Briefcase,
+    Camera,
 } from 'lucide-react';
 import {
     getOfficialById,
@@ -36,13 +37,17 @@ export default function OfficialDetail() {
     const [editing, setEditing] = useState(false);
     const [editForm, setEditForm] = useState({});
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [editPhotoPreview, setEditPhotoPreview] = useState(null);
+    const [editPhonePhotoPreview, setEditPhonePhotoPreview] = useState(null);
 
     useEffect(() => {
         async function load() {
             const o = await getOfficialById(id);
             if (!o) { navigate('/'); return; }
             setOfficial(o);
-            setEditForm({ name: o.name, jabatan: o.jabatan || '', phoneBrand: o.phoneBrand, imei: o.imei });
+            setEditForm({ name: o.name, jabatan: o.jabatan || '', phoneBrand: o.phoneBrand, imei: o.imei, photoUrl: o.photoUrl || '', phonePhotoUrl: o.phonePhotoUrl || '' });
+            setEditPhotoPreview(o.photoUrl || null);
+            setEditPhonePhotoPreview(o.phonePhotoUrl || null);
             setLogs(await getLogsByOfficialId(id));
             const last = await getLastLog(id);
             setLastStatus(last ? last.type : null);
@@ -54,7 +59,23 @@ export default function OfficialDetail() {
 
     const handleSaveEdit = async () => {
         const updated = await updateOfficial(id, editForm);
-        if (updated) { setOfficial(updated); setEditing(false); }
+        if (updated) {
+            setOfficial(updated);
+            setEditing(false);
+            setEditPhotoPreview(updated.photoUrl || null);
+            setEditPhonePhotoPreview(updated.phonePhotoUrl || null);
+        }
+    };
+
+    const handleEditFileChange = (field, setPreview) => (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setPreview(reader.result);
+            setEditForm((prev) => ({ ...prev, [field]: reader.result }));
+        };
+        reader.readAsDataURL(file);
     };
 
     const copyBarcode = () => {
@@ -172,6 +193,53 @@ export default function OfficialDetail() {
                                             className="form-input"
                                             style={{ fontFamily: "'SF Mono', 'Fira Code', monospace" }}
                                         />
+                                    </div>
+                                    {/* Photo uploads */}
+                                    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                                        <div style={{ flex: 1, minWidth: 120 }}>
+                                            <label className="form-label" htmlFor="edit-photo">
+                                                <Camera size={14} style={{ marginRight: 4 }} /> Foto Pejabat
+                                            </label>
+                                            <label style={{ cursor: 'pointer', display: 'block' }}>
+                                                <div style={{
+                                                    width: '100%', height: 120, borderRadius: 12,
+                                                    border: '2px dashed #cbd5e1', display: 'flex',
+                                                    alignItems: 'center', justifyContent: 'center',
+                                                    overflow: 'hidden', background: '#f8fafc'
+                                                }}>
+                                                    {editPhotoPreview ? (
+                                                        <img src={editPhotoPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    ) : (
+                                                        <User size={32} color="#94a3b8" />
+                                                    )}
+                                                </div>
+                                                <input type="file" id="edit-photo" accept="image/*"
+                                                    onChange={handleEditFileChange('photoUrl', setEditPhotoPreview)}
+                                                    style={{ display: 'none' }} />
+                                            </label>
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 120 }}>
+                                            <label className="form-label" htmlFor="edit-phonePhoto">
+                                                <Smartphone size={14} style={{ marginRight: 4 }} /> Foto HP
+                                            </label>
+                                            <label style={{ cursor: 'pointer', display: 'block' }}>
+                                                <div style={{
+                                                    width: '100%', height: 120, borderRadius: 12,
+                                                    border: '2px dashed #cbd5e1', display: 'flex',
+                                                    alignItems: 'center', justifyContent: 'center',
+                                                    overflow: 'hidden', background: '#f8fafc'
+                                                }}>
+                                                    {editPhonePhotoPreview ? (
+                                                        <img src={editPhonePhotoPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    ) : (
+                                                        <Smartphone size={32} color="#94a3b8" />
+                                                    )}
+                                                </div>
+                                                <input type="file" id="edit-phonePhoto" accept="image/*"
+                                                    onChange={handleEditFileChange('phonePhotoUrl', setEditPhonePhotoPreview)}
+                                                    style={{ display: 'none' }} />
+                                            </label>
+                                        </div>
                                     </div>
                                     <button onClick={handleSaveEdit} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
                                         <Save size={16} /> Simpan
