@@ -140,34 +140,34 @@ export default function OfficialDetail() {
                             {editing ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label">Nama</label>
+                                        <label className="form-label" htmlFor="edit-name">Nama</label>
                                         <input
-                                            type="text" name="edit-name" value={editForm.name}
+                                            type="text" id="edit-name" name="edit-name" value={editForm.name}
                                             onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                                             className="form-input"
                                         />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label">Jabatan</label>
+                                        <label className="form-label" htmlFor="edit-jabatan">Jabatan</label>
                                         <input
-                                            type="text" name="edit-jabatan" value={editForm.jabatan}
+                                            type="text" id="edit-jabatan" name="edit-jabatan" value={editForm.jabatan}
                                             onChange={(e) => setEditForm({ ...editForm, jabatan: e.target.value })}
                                             className="form-input"
                                             placeholder="Contoh: Kapolsek"
                                         />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label">Merk HP</label>
+                                        <label className="form-label" htmlFor="edit-phoneBrand">Merk HP</label>
                                         <input
-                                            type="text" name="edit-phoneBrand" value={editForm.phoneBrand}
+                                            type="text" id="edit-phoneBrand" name="edit-phoneBrand" value={editForm.phoneBrand}
                                             onChange={(e) => setEditForm({ ...editForm, phoneBrand: e.target.value })}
                                             className="form-input"
                                         />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <label className="form-label">IMEI</label>
+                                        <label className="form-label" htmlFor="edit-imei">IMEI</label>
                                         <input
-                                            type="text" name="edit-imei" value={editForm.imei}
+                                            type="text" id="edit-imei" name="edit-imei" value={editForm.imei}
                                             onChange={(e) => setEditForm({ ...editForm, imei: e.target.value })}
                                             className="form-input"
                                             style={{ fontFamily: "'SF Mono', 'Fira Code', monospace" }}

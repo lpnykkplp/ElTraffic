@@ -117,11 +117,12 @@ export default function Register() {
                         Informasi Pejabat
                     </h3>
                     <div className="form-group">
-                        <label className="form-label">
+                        <label className="form-label" htmlFor="reg-name">
                             Nama Pejabat <span className="required">*</span>
                         </label>
                         <input
                             type="text"
+                            id="reg-name"
                             name="name"
                             value={form.name}
                             onChange={handleChange}
@@ -131,13 +132,14 @@ export default function Register() {
                         />
                     </div>
                     <div className="form-group">
-                        <label className="form-label">
+                        <label className="form-label" htmlFor="reg-jabatan">
                             Jabatan
                         </label>
                         <div className="form-input-icon">
                             <Briefcase size={16} />
                             <input
                                 type="text"
+                                id="reg-jabatan"
                                 name="jabatan"
                                 value={form.jabatan}
                                 onChange={handleChange}
@@ -155,11 +157,12 @@ export default function Register() {
                         Informasi Perangkat
                     </h3>
                     <div className="form-group">
-                        <label className="form-label">
+                        <label className="form-label" htmlFor="reg-phoneBrand">
                             Merk HP <span className="required">*</span>
                         </label>
                         <input
                             type="text"
+                            id="reg-phoneBrand"
                             name="phoneBrand"
                             value={form.phoneBrand}
                             onChange={handleChange}
@@ -169,13 +172,14 @@ export default function Register() {
                         />
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">
+                        <label className="form-label" htmlFor="reg-imei">
                             Nomor IMEI <span className="required">*</span>
                         </label>
                         <div className="form-input-icon">
                             <Hash size={16} />
                             <input
                                 type="text"
+                                id="reg-imei"
                                 name="imei"
                                 value={form.imei}
                                 onChange={handleChange}
@@ -198,7 +202,7 @@ export default function Register() {
                     <div className="photo-grid">
                         {/* Official photo */}
                         <div>
-                            <label className="form-label">Foto Pejabat</label>
+                            <label className="form-label" htmlFor="reg-photo">Foto Pejabat</label>
                             <label>
                                 <div className="photo-upload">
                                     {photoPreview ? (
@@ -225,6 +229,7 @@ export default function Register() {
                                 </div>
                                 <input
                                     type="file"
+                                    id="reg-photo"
                                     accept="image/*"
                                     onChange={handleFileChange('photoUrl', setPhotoPreview)}
                                     style={{ display: 'none' }}
@@ -234,7 +239,7 @@ export default function Register() {
 
                         {/* Phone photo */}
                         <div>
-                            <label className="form-label">Foto HP</label>
+                            <label className="form-label" htmlFor="reg-phonePhoto">Foto HP</label>
                             <label>
                                 <div className="photo-upload">
                                     {phonePhotoPreview ? (
@@ -261,6 +266,7 @@ export default function Register() {
                                 </div>
                                 <input
                                     type="file"
+                                    id="reg-phonePhoto"
                                     accept="image/*"
                                     onChange={handleFileChange('phonePhotoUrl', setPhonePhotoPreview)}
                                     style={{ display: 'none' }}
