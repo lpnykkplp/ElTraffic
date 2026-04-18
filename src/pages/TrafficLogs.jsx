@@ -1,38 +1,33 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-    LogIn,
-    LogOut,
-    Filter,
-    Search,
-    ClipboardList,
-    Calendar,
-} from 'lucide-react';
-import {
-    getTrafficLogs,
-    getOfficialById,
-    formatDate,
-    formatTime,
-} from '../utils/dataStore';
+import { LogIn, LogOut, Filter, Search, ClipboardList, Calendar, Loader2 } from 'lucide-react';
+import { getTrafficLogs, getOfficialById, formatDate, formatTime } from '../utils/dataStore';
 
 export default function TrafficLogs() {
     const [logs, setLogs] = useState([]);
     const [filter, setFilter] = useState('ALL');
     const [search, setSearch] = useState('');
     const [dateFilter, setDateFilter] = useState('');
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        async function load() {
-            const allLogs = await getTrafficLogs();
-            const enriched = await Promise.all(
-                allLogs.map(async (log) => ({
-                    ...log,
-                    official: await getOfficialById(log.officialId),
-                }))
-            );
-            setLogs(enriched);
+        async function fetchLogs() {
+            try {
+                const allLogs = await getTrafficLogs();
+                const enriched = await Promise.all(
+                    allLogs.map(async (log) => ({
+                        ...log,
+                        official: await getOfficialById(log.officialId),
+                    }))
+                );
+                setLogs(enriched);
+            } catch (err) {
+                console.error('TrafficLogs fetch error:', err);
+            } finally {
+                setLoading(false);
+            }
         }
-        load();
+        fetchLogs();
     }, []);
 
     const filteredLogs = logs.filter((log) => {
@@ -42,6 +37,14 @@ export default function TrafficLogs() {
         return true;
     });
 
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
+                <Loader2 size={32} color="#6366f1" className="spin" />
+            </div>
+        );
+    }
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Filters */}
@@ -49,30 +52,15 @@ export default function TrafficLogs() {
                 <div className="filters">
                     <div className="filter-search">
                         <Search size={16} />
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Cari nama pejabat..."
-                        />
+                        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari nama pejabat..." />
                     </div>
-
                     <div className="filter-date">
                         <Calendar size={16} />
-                        <input
-                            type="date"
-                            value={dateFilter}
-                            onChange={(e) => setDateFilter(e.target.value)}
-                        />
+                        <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
                     </div>
-
                     <div className="filter-tabs">
                         {['ALL', 'IN', 'OUT'].map((f) => (
-                            <button
-                                key={f}
-                                onClick={() => setFilter(f)}
-                                className={`filter-tab ${filter === f ? 'active' : ''}`}
-                            >
+                            <button key={f} onClick={() => setFilter(f)} className={`filter-tab ${filter === f ? 'active' : ''}`}>
                                 {f === 'ALL' ? 'Semua' : f === 'IN' ? 'Masuk' : 'Keluar'}
                             </button>
                         ))}
@@ -80,13 +68,11 @@ export default function TrafficLogs() {
                 </div>
             </div>
 
-            {/* Results count */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', color: '#64748b' }}>
                 <Filter size={16} />
                 <span>{filteredLogs.length} catatan ditemukan</span>
             </div>
 
-            {/* Table */}
             <div className="card" style={{ overflow: 'hidden' }}>
                 {filteredLogs.length === 0 ? (
                     <div className="empty-state">
@@ -107,15 +93,9 @@ export default function TrafficLogs() {
                                 <div key={log.id} className="table-row">
                                     <div className="name-col">
                                         <div className="avatar" style={{ width: 36, height: 36 }}>
-                                            {log.official?.photoUrl ? (
-                                                <img src={log.official.photoUrl} alt="" />
-                                            ) : (
-                                                log.official?.name?.charAt(0) || '?'
-                                            )}
+                                            {log.official?.photoUrl ? <img src={log.official.photoUrl} alt="" /> : log.official?.name?.charAt(0) || '?'}
                                         </div>
-                                        <Link to={`/official/${log.officialId}`}>
-                                            {log.official?.name || 'Tidak diketahui'}
-                                        </Link>
+                                        <Link to={`/official/${log.officialId}`}>{log.official?.name || 'Tidak diketahui'}</Link>
                                     </div>
                                     <div className="text-col">{log.official?.phoneBrand || '-'}</div>
                                     <div className="text-col">{formatDate(log.timestamp)}</div>

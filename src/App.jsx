@@ -5,7 +5,6 @@ import Register from './pages/Register';
 import Scan from './pages/Scan';
 import TrafficLogs from './pages/TrafficLogs';
 import OfficialDetail from './pages/OfficialDetail';
-import OfficialsList from './pages/OfficialsList';
 
 function App() {
   return (
@@ -17,7 +16,6 @@ function App() {
           <Route path="/scan" element={<Scan />} />
           <Route path="/logs" element={<TrafficLogs />} />
           <Route path="/official/:id" element={<OfficialDetail />} />
-          <Route path="/officials" element={<OfficialsList />} />
         </Route>
       </Routes>
     </BrowserRouter>

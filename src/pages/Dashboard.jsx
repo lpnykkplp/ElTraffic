@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Users,
@@ -8,7 +8,7 @@ import {
     ArrowRight,
     Smartphone,
     Clock,
-    Calendar,
+    Loader2,
 } from 'lucide-react';
 import {
     getStats,
@@ -32,69 +32,44 @@ export default function Dashboard() {
         todayScans: 0,
     });
     const [recentLogs, setRecentLogs] = useState([]);
-    const [currentTime, setCurrentTime] = useState(new Date());
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    }, []);
+        async function fetchData() {
+            try {
+                const [statsData, logsData] = await Promise.all([
+                    getStats(),
+                    getTrafficLogs(),
+                ]);
+                setStats(statsData);
 
-    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    const dayName = dayNames[currentTime.getDay()];
-    const dateStr = `${currentTime.getDate()} ${monthNames[currentTime.getMonth()]} ${currentTime.getFullYear()}`;
-    const timeStr = currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-    useEffect(() => {
-        async function loadData() {
-            setStats(await getStats());
-            const logs = (await getTrafficLogs()).slice(0, 10);
-            const enriched = await Promise.all(
-                logs.map(async (log) => ({
-                    ...log,
-                    official: await getOfficialById(log.officialId),
-                }))
-            );
-            setRecentLogs(enriched);
+                const recent = logsData.slice(0, 10);
+                const enriched = await Promise.all(
+                    recent.map(async (log) => ({
+                        ...log,
+                        official: await getOfficialById(log.officialId),
+                    }))
+                );
+                setRecentLogs(enriched);
+            } catch (err) {
+                console.error('Dashboard fetch error:', err);
+            } finally {
+                setLoading(false);
+            }
         }
-        loadData();
+        fetchData();
     }, []);
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
+                <Loader2 size={32} color="#6366f1" className="spin" />
+            </div>
+        );
+    }
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {/* Date & Time */}
-            <div className="card" style={{
-                padding: '20px 24px', marginBottom: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                flexWrap: 'wrap', gap: 12
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <div style={{
-                        width: 44, height: 44, borderRadius: 12,
-                        background: '#eef2ff', display: 'flex',
-                        alignItems: 'center', justifyContent: 'center'
-                    }}>
-                        <Calendar size={22} color="#6366f1" />
-                    </div>
-                    <div>
-                        <p style={{ fontSize: '0.8rem', color: '#6366f1', fontWeight: 600, marginBottom: 2 }}>
-                            {dayName}
-                        </p>
-                        <p style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
-                            {dateStr}
-                        </p>
-                    </div>
-                </div>
-                <div style={{
-                    fontSize: '1.5rem', fontWeight: 700, color: '#0f172a',
-                    fontFamily: "'SF Mono', 'Fira Code', monospace",
-                    letterSpacing: 2, background: '#f8fafc',
-                    padding: '8px 16px', borderRadius: 10
-                }}>
-                    {timeStr}
-                </div>
-            </div>
-
             {/* Stats */}
             <div className="stats-grid">
                 {statCards.map(({ key, label, icon: Icon, bg }, i) => (

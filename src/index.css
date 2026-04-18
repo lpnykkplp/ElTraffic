@@ -72,8 +72,7 @@ body {
 .app-layout {
   display: flex;
   width: 100%;
-  height: 100%;
-  height: 100dvh;
+  height: 100vh;
   overflow: hidden;
 }
 
@@ -227,93 +226,33 @@ body {
   z-index: 40;
 }
 
-/* ─── Bottom Navigation ─── */
-.bottom-nav {
-  display: none;
-}
-
 /* Responsive */
 @media (max-width: 1023px) {
-  .app-layout {
-    flex-direction: column;
-  }
-
   .sidebar {
-    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: translateX(-100%);
   }
 
-  .sidebar-overlay {
-    display: none !important;
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay.show {
+    display: block;
   }
 
   .menu-btn {
-    display: none;
+    display: block;
   }
 
   .top-bar {
     padding: 0 16px;
-    justify-content: center;
-  }
-
-  .main-content {
-    flex: 1;
-    min-height: 0;
   }
 
   .page-content {
     padding: 16px;
-  }
-
-  .bottom-nav {
-    display: flex;
-    flex-shrink: 0;
-    height: calc(64px + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: white;
-    border-top: 1px solid #e2e8f0;
-    z-index: 50;
-    align-items: stretch;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  }
-
-  .bottom-nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    text-decoration: none;
-    color: #94a3b8;
-    font-size: 0.6rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    position: relative;
-    padding: 8px 0;
-  }
-
-  .bottom-nav-item span {
-    max-width: 64px;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .bottom-nav-item.active {
-    color: #6366f1;
-  }
-
-  .bottom-nav-item.active::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 32px;
-    height: 3px;
-    background: #6366f1;
-    border-radius: 0 0 4px 4px;
   }
 }
 
@@ -1228,6 +1167,15 @@ body {
   animation: fadeIn 0.35s ease-out;
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
 /* ─── Utility ─── */
 .text-center {
   text-align: center;
@@ -1299,182 +1247,4 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* ─── Officials List ─── */
-.officials-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
-
-@media (max-width: 768px) {
-  .officials-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.officials-card {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.25s;
-  position: relative;
-}
-
-.officials-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-}
-
-.officials-card-actions {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  gap: 4px;
-  z-index: 2;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.officials-card:hover .officials-card-actions {
-  opacity: 1;
-}
-
-.officials-icon-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: none;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #64748b;
-  transition: all 0.2s;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.officials-icon-btn:hover {
-  background: white;
-  color: #6366f1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-
-.officials-icon-btn-danger:hover {
-  color: #ef4444;
-}
-
-.officials-qr-section {
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
-  padding: 28px 24px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.officials-qr-wrapper {
-  background: white;
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.08);
-  display: inline-flex;
-}
-
-.officials-barcode-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #6366f1;
-  background: white;
-  padding: 5px 12px;
-  border-radius: 999px;
-  border: 1px solid #e0e7ff;
-}
-
-.officials-info-section {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  flex: 1;
-}
-
-.officials-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  background: #f1f5f9;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.officials-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.officials-name {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #0f172a;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.officials-brand {
-  font-size: 0.75rem;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-}
-
-.officials-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.officials-meta-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  color: #94a3b8;
-  background: #f8fafc;
-  padding: 8px 10px;
-  border-radius: 8px;
-}
-
-.officials-meta-item .mono {
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 0.7rem;
-  color: #64748b;
-}
-
-.officials-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.officials-action-btn {
-  flex: 1;
-  padding: 9px 12px !important;
-  font-size: 0.75rem !important;
-  border-radius: 10px !important;
 }

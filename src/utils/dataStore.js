@@ -1,49 +1,30 @@
-// Supabase-backed data store for ElTraffic
+// Supabase-based data store for ElTraffic
 import { supabase } from './supabaseClient';
 
-// ─── Photo Upload Helper ───
+// ─── Helper: convert DB row (snake_case) → JS object (camelCase) ───
 
-async function uploadPhoto(file, folder) {
-    if (!file) return '';
-    // file is a base64 data URL string
-    if (!file.startsWith('data:')) return file; // already a URL
-
-    const base64 = file.split(',')[1];
-    const mimeMatch = file.match(/data:(.*?);/);
-    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-    const ext = mime.split('/')[1] || 'jpg';
-    const fileName = `${folder}/${crypto.randomUUID()}.${ext}`;
-
-    const byteString = atob(base64);
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-    }
-    const blob = new Blob([ab], { type: mime });
-
-    const { error } = await supabase.storage
-        .from('photos')
-        .upload(fileName, blob, { contentType: mime, upsert: false });
-
-    if (error) {
-        console.error('Upload error:', error);
-        return file; // fallback: keep base64
-    }
-
-    const { data: urlData } = supabase.storage
-        .from('photos')
-        .getPublicUrl(fileName);
-
-    return urlData.publicUrl;
+function toOfficial(row) {
+    if (!row) return null;
+    return {
+        id: row.id,
+        name: row.name,
+        phoneBrand: row.phone_brand,
+        imei: row.imei,
+        barcode: row.barcode,
+        photoUrl: row.photo_url,
+        phonePhotoUrl: row.phone_photo_url,
+        createdAt: row.created_at,
+    };
 }
 
-async function deletePhoto(url) {
-    if (!url || !url.includes('/storage/v1/object/public/photos/')) return;
-    const path = url.split('/storage/v1/object/public/photos/')[1];
-    if (path) {
-        await supabase.storage.from('photos').remove([path]);
-    }
+function toLog(row) {
+    if (!row) return null;
+    return {
+        id: row.id,
+        officialId: row.official_id,
+        type: row.type,
+        timestamp: row.timestamp,
+    };
 }
 
 // ─── Officials ───
@@ -53,14 +34,8 @@ export async function getOfficials() {
         .from('officials')
         .select('*')
         .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error('getOfficials error:', error);
-        return [];
-    }
-
-    // Map DB column names to app field names
-    return data.map(mapOfficialFromDB);
+    if (error) { console.error('getOfficials error:', error); return []; }
+    return data.map(toOfficial);
 }
 
 export async function getOfficialById(id) {
@@ -69,13 +44,8 @@ export async function getOfficialById(id) {
         .select('*')
         .eq('id', id)
         .single();
-
-    if (error) {
-        console.error('getOfficialById error:', error);
-        return null;
-    }
-
-    return mapOfficialFromDB(data);
+    if (error) { console.error('getOfficialById error:', error); return null; }
+    return toOfficial(data);
 }
 
 export async function getOfficialByBarcode(barcode) {
@@ -84,83 +54,52 @@ export async function getOfficialByBarcode(barcode) {
         .select('*')
         .eq('barcode', barcode)
         .single();
-
-    if (error) return null;
-    return mapOfficialFromDB(data);
+    if (error) { console.error('getOfficialByBarcode error:', error); return null; }
+    return toOfficial(data);
 }
 
 export async function addOfficial(official) {
-    const photoUrl = await uploadPhoto(official.photoUrl, 'officials');
-    const phonePhotoUrl = await uploadPhoto(official.phonePhotoUrl, 'phones');
-
-    const newOfficial = {
+    const newRow = {
         name: official.name,
-        jabatan: official.jabatan || '',
         phone_brand: official.phoneBrand,
         imei: official.imei,
         barcode: generateBarcode(),
-        photo_url: photoUrl,
-        phone_photo_url: phonePhotoUrl,
+        photo_url: official.photoUrl || null,
+        phone_photo_url: official.phonePhotoUrl || null,
     };
-
     const { data, error } = await supabase
         .from('officials')
-        .insert([newOfficial])
+        .insert(newRow)
         .select()
         .single();
-
-    if (error) {
-        console.error('addOfficial error:', error);
-        return null;
-    }
-
-    return mapOfficialFromDB(data);
+    if (error) { console.error('addOfficial error:', error); return null; }
+    return toOfficial(data);
 }
 
 export async function updateOfficial(id, updates) {
-    // Upload new photos if they are base64
-    const dbUpdates = {};
-    if (updates.name !== undefined) dbUpdates.name = updates.name;
-    if (updates.jabatan !== undefined) dbUpdates.jabatan = updates.jabatan;
-    if (updates.phoneBrand !== undefined) dbUpdates.phone_brand = updates.phoneBrand;
-    if (updates.imei !== undefined) dbUpdates.imei = updates.imei;
-
-    if (updates.photoUrl !== undefined) {
-        dbUpdates.photo_url = await uploadPhoto(updates.photoUrl, 'officials');
-    }
-    if (updates.phonePhotoUrl !== undefined) {
-        dbUpdates.phone_photo_url = await uploadPhoto(updates.phonePhotoUrl, 'phones');
-    }
+    const row = {};
+    if (updates.name !== undefined) row.name = updates.name;
+    if (updates.phoneBrand !== undefined) row.phone_brand = updates.phoneBrand;
+    if (updates.imei !== undefined) row.imei = updates.imei;
+    if (updates.photoUrl !== undefined) row.photo_url = updates.photoUrl;
+    if (updates.phonePhotoUrl !== undefined) row.phone_photo_url = updates.phonePhotoUrl;
 
     const { data, error } = await supabase
         .from('officials')
-        .update(dbUpdates)
+        .update(row)
         .eq('id', id)
         .select()
         .single();
-
-    if (error) {
-        console.error('updateOfficial error:', error);
-        return null;
-    }
-
-    return mapOfficialFromDB(data);
+    if (error) { console.error('updateOfficial error:', error); return null; }
+    return toOfficial(data);
 }
 
 export async function deleteOfficial(id) {
-    // Get official first to delete photos
-    const official = await getOfficialById(id);
-    if (official) {
-        await deletePhoto(official.photoUrl);
-        await deletePhoto(official.phonePhotoUrl);
-    }
-
-    // Logs are cascade-deleted by the DB
+    // traffic_logs will cascade delete via FK
     const { error } = await supabase
         .from('officials')
         .delete()
         .eq('id', id);
-
     if (error) console.error('deleteOfficial error:', error);
 }
 
@@ -171,31 +110,18 @@ export async function getTrafficLogs() {
         .from('traffic_logs')
         .select('*')
         .order('timestamp', { ascending: false });
-
-    if (error) {
-        console.error('getTrafficLogs error:', error);
-        return [];
-    }
-
-    return data.map(mapLogFromDB);
+    if (error) { console.error('getTrafficLogs error:', error); return []; }
+    return data.map(toLog);
 }
 
 export async function addTrafficLog(officialId, type) {
     const { data, error } = await supabase
         .from('traffic_logs')
-        .insert([{
-            official_id: officialId,
-            type,
-        }])
+        .insert({ official_id: officialId, type })
         .select()
         .single();
-
-    if (error) {
-        console.error('addTrafficLog error:', error);
-        return null;
-    }
-
-    return mapLogFromDB(data);
+    if (error) { console.error('addTrafficLog error:', error); return null; }
+    return toLog(data);
 }
 
 export async function getLogsByOfficialId(officialId) {
@@ -204,13 +130,8 @@ export async function getLogsByOfficialId(officialId) {
         .select('*')
         .eq('official_id', officialId)
         .order('timestamp', { ascending: false });
-
-    if (error) {
-        console.error('getLogsByOfficialId error:', error);
-        return [];
-    }
-
-    return data.map(mapLogFromDB);
+    if (error) { console.error('getLogsByOfficialId error:', error); return []; }
+    return data.map(toLog);
 }
 
 export async function getLastLog(officialId) {
@@ -221,26 +142,24 @@ export async function getLastLog(officialId) {
         .order('timestamp', { ascending: false })
         .limit(1)
         .single();
-
-    if (error) return null;
-    return mapLogFromDB(data);
+    if (error) {
+        // PGRST116 = no rows found, not a real error
+        if (error.code !== 'PGRST116') console.error('getLastLog error:', error);
+        return null;
+    }
+    return toLog(data);
 }
 
 export async function getTodayLogs() {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const { data, error } = await supabase
         .from('traffic_logs')
         .select('*')
-        .gte('timestamp', `${today}T00:00:00`)
-        .lte('timestamp', `${today}T23:59:59`)
+        .gte('timestamp', today.toISOString())
         .order('timestamp', { ascending: false });
-
-    if (error) {
-        console.error('getTodayLogs error:', error);
-        return [];
-    }
-
-    return data.map(mapLogFromDB);
+    if (error) { console.error('getTodayLogs error:', error); return []; }
+    return data.map(toLog);
 }
 
 export async function getStats() {
@@ -258,31 +177,6 @@ export async function getStats() {
         insideCount,
         outsideCount: officials.length - insideCount,
         todayScans: todayLogs.length,
-    };
-}
-
-// ─── DB Field Mapping ───
-
-function mapOfficialFromDB(row) {
-    return {
-        id: row.id,
-        name: row.name,
-        jabatan: row.jabatan || '',
-        phoneBrand: row.phone_brand,
-        imei: row.imei,
-        barcode: row.barcode,
-        photoUrl: row.photo_url || '',
-        phonePhotoUrl: row.phone_photo_url || '',
-        createdAt: row.created_at,
-    };
-}
-
-function mapLogFromDB(row) {
-    return {
-        id: row.id,
-        officialId: row.official_id,
-        type: row.type,
-        timestamp: row.timestamp,
     };
 }
 
